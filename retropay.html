@@ -1,0 +1,219 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>IIU Retro Pay Calculator — Offline</title>
+<style>
+  :root {
+    --bg: #f6f8fb;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --text: #0f172a;
+    --muted: #64748b;
+    --greenBg: #ecfdf5;
+    --greenText: #065f46;
+    --amberBg: #fffbeb;
+    --amberText: #92400e;
+    --indigoBg: #eef2ff;
+    --indigoText: #3730a3;
+    --chipBg: #f1f5f9;
+  }
+  * { box-sizing: border-box; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; }
+  body { margin: 0; background: var(--bg); color: var(--text); }
+  .wrap { max-width: 900px; margin: 32px auto; padding: 0 16px; }
+  h1 { text-align: center; font-size: 26px; margin: 0 0 8px; }
+  .sub { text-align: center; color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+  .grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  @media (min-width: 800px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 14px; }
+  label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  select, input[type="text"], input[type="number"] {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 12px; font-size: 15px;
+  }
+  .bubbles { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 20px; }
+  .bubble { background: #e8faf1; border: 1px solid #b7f0d0; color: #064e3b; padding: 10px 14px; border-radius: 999px; font-weight: 600; font-size: 13px; }
+  .chip { background: var(--chipBg); color: var(--muted); border-radius: 999px; padding: 6px 10px; font-size: 12px; display: inline-block; margin-left: 8px; }
+  .rows { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  @media (min-width: 800px) { .rows { grid-template-columns: repeat(3, 1fr); } }
+  .panel { border: 1px solid var(--border); border-radius: 16px; padding: 16px; background: linear-gradient(#fff, #f8fafc); }
+  .title { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  .big { font-size: 28px; font-weight: 800; }
+  .g { background: var(--greenBg); color: var(--greenText); }
+  .a { background: var(--amberBg); color: var(--amberText); }
+  .i { background: var(--indigoBg); color: var(--indigoText); }
+  footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 24px; }
+  .note { font-size: 12px; color: var(--muted); margin-top: 6px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>IIU Retro Pay Calculator — Gross + OT (Offline)</h1>
+    <div class="sub">
+      Period: <b>July 1 – October 31</b> • <b id="periods">8</b> semi‑monthly periods • COLA <b>5.5%</b> • Hourly basis <b>75.83</b> hrs/pay period
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <label>Role (Title)</label>
+        <select id="title">
+          <option>Investigator</option>
+          <option>Homicide Investigator</option>
+          <option>Interpreter</option>
+          <option>Building Maintenance Coordinator</option>
+        </select>
+      </div>
+      <div class="card">
+        <label>Start Date</label>
+        <input id="start" type="text" placeholder="MM/DD/YYYY" />
+        <div class="note">Example: 07/01/2019</div>
+      </div>
+      <div class="card">
+        <label>Overtime Hours (Jul 1 – Oct 31)</label>
+        <input id="ot" type="number" min="0" step="0.01" value="0" />
+      </div>
+    </div>
+
+    <div class="bubbles">
+      <div class="bubble"><span style="opacity:.7; margin-right:6px;">FY2025 Annual (Old):</span><span id="oldAnnual">$0.00</span></div>
+      <div class="bubble"><span style="opacity:.7; margin-right:6px;">FY2025 Semi‑Monthly:</span><span id="semi">$0.00</span></div>
+      <div class="chip">Step at Jul 1: <span id="step">0</span></div>
+    </div>
+
+    <div class="rows">
+      <div class="panel g">
+        <div class="title">Per‑Period Difference</div>
+        <div class="big" id="ppd">$0.00</div>
+        <div class="note">= Semi‑Monthly × 5.5%</div>
+      </div>
+      <div class="panel a">
+        <div class="title">OT Delta per Hour</div>
+        <div class="big" id="otd">$0.00</div>
+        <div class="note">= (Semi‑Monthly ÷ 75.83) × 1.5 × 5.5%</div>
+      </div>
+      <div class="panel">
+        <div class="title">Retro Periods</div>
+        <div class="big" id="periodShow">8</div>
+        <div class="note">Jul 1 → Oct 31</div>
+      </div>
+    </div>
+
+    <div class="rows" style="margin-top:12px;">
+      <div class="panel">
+        <div class="title">Regular Retro — Gross</div>
+        <div class="big" id="regular">$0.00</div>
+      </div>
+      <div class="panel">
+        <div class="title">OT Retro — Gross</div>
+        <div class="big" id="otRetro">$0.00</div>
+      </div>
+      <div class="panel">
+        <div class="title">Total Retro — Gross</div>
+        <div class="big" id="total">$0.00</div>
+      </div>
+    </div>
+
+    <footer>Built for IIU membership • Uses FY2025 tables, 5.5% COLA, 8 periods, and 75.83 hrs/pay period for OT.</footer>
+  </div>
+
+<script>
+(function(){
+  // Constants
+  const COLA = 0.055;
+  const RETRO_PERIODS = 8;
+  const HOURS_PP = 75.83; // biweekly-style hours per pay period used by payroll
+  const MAX_STEP = { "Investigator":25, "Homicide Investigator":25, "Interpreter":25, "Building Maintenance Coordinator":20 };
+  const STEP_OFFSET = { "Investigator":0, "Homicide Investigator":0, "Interpreter":0, "Building Maintenance Coordinator":0 };
+
+  // Salary tables (annual)
+  const FY2025 = {
+    "Investigator":[57383,57813,58390,59535,60130,61333,61946,62565,63816,64456,65583,66120,67443,68792,70168,71220,72645,73734,74840,75963,77482,78482,79482,80482,81482,82482],
+    "Homicide Investigator":[69033,69463,70040,71185,71780,72983,73596,74215,75466,76106,77233,77770,79093,80442,81818,82870,84295,85384,86490,87613,89132,90132,91132,92132,93132,94132],
+    "Interpreter":[61413,61721,62338,63559,64196,65480,66135,66796,68132,68813,70190,70891,71601,72316,73039,73770,74877,76000,77140,78297,79862,80862,81862,82862,83862,84862],
+    "Building Maintenance Coordinator":[53500,54035,54575,55121,55672,56229,56791,57359,57933,58512,59097,59688,60285,60888,61497,62112,62733,63360,63994,64634,65280]
+  };
+
+  // Elements
+  const el = (id)=>document.getElementById(id);
+  const titleEl = el('title');
+  const startEl = el('start');
+  const otEl = el('ot');
+  const oldAnnualEl = el('oldAnnual');
+  const semiEl = el('semi');
+  const stepEl = el('step');
+  const ppdEl = el('ppd');
+  const otdEl = el('otd');
+  const periodShowEl = el('periodShow');
+  const regularEl = el('regular');
+  const otRetroEl = el('otRetro');
+  const totalEl = el('total');
+
+  function fmtUSD(n){ return isFinite(n) ? n.toLocaleString(undefined,{style:'currency',currency:'USD',maximumFractionDigits:2}) : '—'; }
+
+  function parseMMDDYYYY(s){
+    if(!s) return null;
+    const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if(!m) return null;
+    const mm = +m[1], dd = +m[2], yyyy = +m[3];
+    const d = new Date(yyyy, mm-1, dd);
+    if(d.getMonth()+1 !== mm || d.getDate() !== dd || d.getFullYear() !== yyyy) return null;
+    return d;
+  }
+
+  function fiscalYearsSince(startDate, asOf){
+    // Fiscal year starts July 1. Return full fiscal years completed by asOf.
+    const fyStart = (d)=> (d.getMonth()>=6 ? d.getFullYear()+1 : d.getFullYear());
+    const startFY = fyStart(startDate);
+    const asOfFY  = fyStart(asOf);
+    return Math.max(0, asOfFY - startFY);
+  }
+
+  function recalc(){
+    const title = titleEl.value;
+    const startDate = parseMMDDYYYY(startEl.value);
+    const otHours = parseFloat(otEl.value||'0') || 0;
+    const retroStart = new Date(new Date().getFullYear(), 6, 1); // July 1
+
+    // Step calc
+    let step = 0;
+    if(startDate){
+      const years = fiscalYearsSince(startDate, retroStart);
+      step = Math.min((STEP_OFFSET[title]||0) + years, MAX_STEP[title]);
+    }
+
+    const table = FY2025[title] || [];
+    const oldAnnual = table[Math.min(Math.max(step,0), table.length-1)] || 0;
+    const semi = oldAnnual / 24;
+    const perPeriodDiff = semi * COLA;
+    const baseRetro = perPeriodDiff * RETRO_PERIODS;
+
+    // Hourly via semi-monthly / 75.83
+    const oldHourly = semi / HOURS_PP;
+    const otDeltaPerHour = oldHourly * 1.5 * COLA;
+    const otRetro = otHours * otDeltaPerHour;
+    const total = baseRetro + otRetro;
+
+    // Render
+    oldAnnualEl.textContent = fmtUSD(oldAnnual);
+    semiEl.textContent = fmtUSD(semi);
+    stepEl.textContent = step;
+    ppdEl.textContent = fmtUSD(perPeriodDiff);
+    otdEl.textContent = fmtUSD(otDeltaPerHour);
+    periodShowEl.textContent = RETRO_PERIODS;
+    regularEl.textContent = fmtUSD(baseRetro);
+    otRetroEl.textContent = fmtUSD(otRetro);
+    totalEl.textContent = fmtUSD(total);
+  }
+
+  // Events
+  titleEl.addEventListener('change', recalc);
+  startEl.addEventListener('input', recalc);
+  otEl.addEventListener('input', recalc);
+
+  // Initial
+  recalc();
+})();
+</script>
+</body>
+</html>
